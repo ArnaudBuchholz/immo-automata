@@ -1,0 +1,18 @@
+# Windows specifics
+Thumbs.db
+Desktop.ini
+
+# Git override
+
+.gitconfig
+
+# NPM
+node_modules/
+
+# Temporary folder
+
+tmp/*
+
+# Editors
+
+.idea
