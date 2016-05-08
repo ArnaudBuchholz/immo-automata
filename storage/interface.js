@@ -19,7 +19,7 @@ module.exports = {
      * Retrieve a record from the storage
      *
      * @param {String} uid Record unique id
-     * @return {Promise<Object|nul>}
+     * @return {Promise<Object|null>}
      */
     find: function (uid) {
         _ignore(uid);
