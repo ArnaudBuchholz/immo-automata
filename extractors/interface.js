@@ -1,5 +1,7 @@
 "use strict";
 
+function _ignore() {}
+
 module.exports = {
 
     /**
@@ -14,6 +16,8 @@ module.exports = {
      * @returns {Promise}
      */
     init: function (config, callback) {
+        _ignore(config);
+        _ignore(callback);
         return Promise.resolve();
     }
 
