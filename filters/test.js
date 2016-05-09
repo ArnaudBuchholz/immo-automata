@@ -12,9 +12,8 @@ module.exports = {
 
     filter: function (config, record) {
         return new Promise(function (resolve, reject) {
-            console.log("filter: " + JSON.stringify(record));
             var result = record;
-            if (-1 < config.exclude && config.exclude.indexOf(record.label)) {
+            if (config.exclude && -1 < config.exclude.indexOf(record.label)) {
                 result = null;
             }
             if (result && config.add) {
