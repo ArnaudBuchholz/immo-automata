@@ -11,6 +11,8 @@ module.exports = {
      * - A modified record
      * - null (the record is ignored)
      *
+     * An empty object is allocated and used as a this context for the filter.
+     *
      * @param {Object} config Filter specific config
      * @param {Object} record
      * @returns {Promise<Object|null>}
