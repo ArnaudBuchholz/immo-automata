@@ -10,7 +10,7 @@ module.exports = {
      * @param {Object} config Storage specific config
      * @returns {Promise}
      */
-    init: function (config) {
+    open: function (config) {
         _ignore(config);
         return Promise.resolve();
     },
