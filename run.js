@@ -20,7 +20,6 @@ function recordExtracted (uid, record) {
         function loop () {
             filters[idx](record)
                 .then (function (newRecord) {
-                    console.log(idx + " " + JSON.stringify(newRecord));
                     if (newRecord) {
                         record = newRecord;
                         if (++idx < filters.length) {
@@ -47,7 +46,7 @@ function recordExtracted (uid, record) {
 verbose("Processing filters");
 config.filters.forEach(function (config) {
     var filterModule = require("./filters/" + config.type + ".js");
-    filters.push(filterModule.filter.bind(config));
+    filters.push(filterModule.filter.bind(null, config));
 });
 
 verbose("Running extractors");
