@@ -10,9 +10,11 @@ module.exports = {
      * The extractor must wait for the callback to resolve to continue its work.
      * If the callback promise is rejected, the extractor must stop.
      *
+     * An empty object is allocated and used as a this context for the filter.
+     *
      * @param {Object} config Extractor specific config
      * @param {Function} callback:
-     *  function (uid, record) { return Promise.resolve(); }
+     *  function (record) { return Promise.resolve(); }
      *
      * @returns {Promise}
      */
