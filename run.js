@@ -8,7 +8,10 @@ var fs = require("fs"),
     filters = [],
     extractorPromises = [],
     storageContext,
-    storage;
+    storage,
+    pendingExtractions = 0,
+    extractionPromise,
+    extractionDone;
 
 if (enableVerbose) {
     verbose = console.log.bind(console);
@@ -16,24 +19,33 @@ if (enableVerbose) {
     verbose = function () {};
 }
 
-function recordExtracted (uid, record) {
+function recordExtracted (record) {
     var idx = 0;
+    ++pendingExtractions;
+
+    function done () {
+        if (0 === --pendingExtractions && extractionDone) {
+            extractionDone();
+        }
+    }
+
     function loop () {
         filters[idx](record)
-            .then (function (newRecord) {
+            .then(function (newRecord) {
                 if (newRecord) {
                     record = newRecord;
                     if (++idx < filters.length) {
                         loop();
                     } else {
-                        storage.set(uid, record, false).then(resolve);
+                        storage.add.call(storageContext, config.storage, record, false).then(done);
                     }
                 } else {
-                    resolve();
+                    done();
                 }
 
             }, function (reason) {
                 console.error(reason);
+                done();
             });
     }
     if (filters.length) {
@@ -44,9 +56,9 @@ function recordExtracted (uid, record) {
 }
 
 verbose("Processing filters...");
-config.filters.forEach(function (config) {
-    var filterModule = require("./filters/" + config.type + ".js");
-    filters.push(filterModule.filter.bind({}, config));
+config.filters.forEach(function (filterConfig) {
+    var filterModule = require("./filters/" + filterConfig.type + ".js");
+    filters.push(filterModule.filter.bind({}, filterConfig));
 });
 
 verbose("Opening storage...");
@@ -54,19 +66,26 @@ storageContext = {};
 storage = require("./storage/" + config.storage.type + ".js");
 storage.open.call(storageContext, config.storage)
     .then(function () {
+
         verbose("Running extractors...");
-        config.extractors.forEach(function (config) {
-            var extractorModule = require("./extractors/" + config.type + ".js");
-            extractorPromises.push(extractorModule.start.call({}, config, recordExtracted));
+        config.extractors.forEach(function (extractorConfig) {
+            var extractorModule = require("./extractors/" + extractorConfig.type + ".js");
+            extractorPromises.push(extractorModule.start.call({}, extractorConfig, recordExtracted));
         });
 
         Promise.all(extractorPromises)
-            .then(function (statuses) {
+            .then(function (/*statuses*/) {
+                verbose("end of extractors, waiting for pending extractions...");
+                extractionPromise = new Promise(function (resolve) {
+                    extractionDone = resolve;
+                });
+                return extractionPromise;
+            })
+            .then(function () {
+                verbose("end of extraction, waiting for storage closing...");
+                return storage.close.call(storageContext);
+            })
+            .then(function () {
                 verbose("end.");
-                storage.close.call(storageContext);
             });
     });
-
-
-
-
