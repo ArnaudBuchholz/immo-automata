@@ -1,38 +1,33 @@
 "use strict";
 
-function _ignore() {}
+var CONSTANTS = require("../constants.js")/*,
+    helpers = require("../helpers.js")*/;
 
 module.exports = {
 
+    // @inheritdoc storage#open
     open: function (config) {
-        _ignore(config);
+        this.config = config;
         return Promise.resolve();
     },
 
-    find: function (uid) {
-        _ignore(uid);
-        return Promise.resolve(null);
+    // @inheritdoc storage#find
+    find: function (config, uid) {
+        var record = config.records[uid];
+        if (!record) {
+            record = null;
+        }
+        return Promise.resolve(record);
     },
 
-    /**
-     * Adds a record to the storage
-     *
-     * @param {String} uid Record unique id
-     * @param {Object} record Record values
-     * @param {Boolean} updated Record was updated (or is new if false)
-     * @return {Promise}
-     */
-    set: function (uid, record, updated) {
-        console.log(uid + "(" + updated + "): " + JSON.stringify(record));
+    // @inheritdoc storage#add
+    add: function (config, record, updated) {
+        console.log(record[CONSTANTS.RECORD_UID] + "(" + updated + "): " + JSON.stringify(record));
         return Promise.resolve();
     },
 
-    /**
-     * Terminate the storage
-     *
-     * @returns {Promise}
-     */
-    close: function () {
+    // @inheritdoc storage#close
+    close: function (/*config*/) {
         return Promise.resolve();
     }
 
