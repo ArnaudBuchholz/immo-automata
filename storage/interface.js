@@ -1,52 +1,56 @@
+/*eslint-disable no-unused-vars*/
 "use strict";
-
-function _ignore() {}
 
 module.exports = {
 
     /**
-     * Initialize storage based on provided configuration
+     * Open storage.
+     *
+     * An empty object is allocated and used as a this context for the storage.
      *
      * @param {Object} config Storage specific config
-     * @returns {Promise}
+     * @returns {Promise} Resolved when the storage is opened
      */
     open: function (config) {
-        _ignore(config);
         return Promise.resolve();
     },
 
     /**
-     * Retrieve a record from the storage
+     * Retrieve a record.
      *
+     * An empty object is allocated and used as a this context for the storage.
+     *
+     * @param {Object} config Storage specific config
      * @param {String} uid Record unique id
-     * @return {Promise<Object|null>}
+     * @return {Promise<Object|null>} Resolved with the retrieved record (null if none)
      */
-    find: function (uid) {
-        _ignore(uid);
+    find: function (config, uid) {
         return Promise.resolve(null);
     },
 
     /**
-     * Adds a record to the storage
+     * Add a record to the storage.
      *
-     * @param {String} uid Record unique id
+     * An empty object is allocated and used as a this context for the storage.
+     *
+     * @param {Object} config Storage specific config
      * @param {Object} record Record values
      * @param {Boolean} updated Record was updated (or is new if false)
-     * @return {Promise}
+     * @return {Promise} Resolved when added
      */
-    set: function (uid, record, updated) {
-        _ignore(uid);
-        _ignore(record);
-        _ignore(updated);
-        return Promise.resolve(null);
+    add: function (config, record, updated) {
+        return Promise.resolve();
     },
 
     /**
-     * Terminate the storage
+     * Close storage.
      *
+     * An empty object is allocated and used as a this context for the storage.
+     *
+     * @param {Object} config Storage specific config
      * @returns {Promise}
      */
-    close: function () {
+    close: function (config) {
         return Promise.resolve();
     }
 
