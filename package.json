@@ -15,6 +15,7 @@
     "url": "https://github.com/ArnaudBuchholz/immo-automata/issues"
   },
   "devDependencies": {
+    "deep-equal": "^1.0.1",
     "eslint": "^1.10.3",
     "googlemaps": "^1.4.0",
     "grunt": "^0.4.5",
