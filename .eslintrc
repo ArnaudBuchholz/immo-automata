@@ -111,7 +111,7 @@
         "comma-spacing":                [2, {"before": false, "after": true}],
         "comma-style":                  [2, "last"],
         "computed-property-spacing": 0,
-        "consistent-this":              [2, "me"],
+        "consistent-this":              [2, "ctx"],
         "eol-last":                     2,
         "func-names":                   0,
         "func-style":                   [2, "declaration"],
