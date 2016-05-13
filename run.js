@@ -1,6 +1,8 @@
 "use strict";
 
-var fs = require("fs"),
+var CONSTANTS = require("./constants.js"),
+    helpers = require("./helpers.js"),
+    fs = require("fs"),
     configFilename = process.argv[2] || "config",
     config = JSON.parse(fs.readFileSync(configFilename).toString()),
     enableVerbose = "-verbose" === process.argv[3],
@@ -19,8 +21,10 @@ if (enableVerbose) {
     verbose = function () {};
 }
 
-function recordExtracted (record) {
-    var idx = 0;
+function recordExtracted (extractorRecord) {
+    var idx = 0,
+        record,
+        storedRecord;
     ++pendingExtractions;
 
     function done () {
@@ -29,28 +33,60 @@ function recordExtracted (record) {
         }
     }
 
+    function failed (reason) {
+        console.error(reason);
+        done();
+    }
+
+    function succeeded () {
+        var updated;
+        if (storedRecord) {
+            if (helpers.equal(storedRecord, record)) {
+                done();
+                return;
+            }
+            updated = true;
+        } else {
+            updated = false;
+        }
+        storage.add.call(storageContext, config.storage, record, updated).then(done, failed);
+    }
+
     function loop () {
         filters[idx](record)
-            .then(function (newRecord) {
-                if (newRecord) {
-                    record = newRecord;
+            .then(function (filteredRecord) {
+                if (filteredRecord) {
+                    record = filteredRecord;
                     if (++idx < filters.length) {
                         loop();
                     } else {
-                        storage.add.call(storageContext, config.storage, record, false).then(done);
+                        succeeded();
                     }
                 } else {
                     done();
                 }
 
-            }, function (reason) {
-                console.error(reason);
-                done();
-            });
+            }, failed);
     }
-    if (filters.length) {
-        loop();
-    }
+
+    storage.find.call(storageContext, config.storage, extractorRecord[CONSTANTS.RECORD_UID])
+        .then(function (storageRecord) {
+
+            record = {};
+            if (storageRecord) {
+                storedRecord = storageRecord;
+                helpers.extend(record, storageRecord);
+            }
+            helpers.extend(record, extractorRecord);
+
+            if (filters.length) {
+                loop();
+            } else {
+                succeeded();
+            }
+
+        }, failed);
+
     // For now, no need to wait
     return Promise.resolve();
 }
