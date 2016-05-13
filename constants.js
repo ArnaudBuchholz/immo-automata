@@ -1,9 +1,6 @@
-(function () {
-    "use strict";
+"use strict";
 
-    module.exports = {
-        RECORD_UID: "RUID"
+module.exports = {
+    RECORD_UID: "RUID"
 
-    };
-
-}());
+};
