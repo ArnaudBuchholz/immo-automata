@@ -9,6 +9,8 @@ module.exports = {
      * For each extracted record that should be processed, the callback must be used.
      * Records must have a member with the name require("../constants.js").RECORD_UID
      *
+     * The records are copied, meaning you can safely reuse the same structure.
+     *
      * The callback returns a promise:
      * - The extractor must wait for the promise to resolve to continue its work
      * - If the promise is rejected, the extractor must stop
