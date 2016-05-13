@@ -124,4 +124,6 @@ storage.open.call(storageContext, config.storage)
             .then(function () {
                 verbose("end.");
             });
+    }, function (reason) {
+        console.error(reason);
     });
