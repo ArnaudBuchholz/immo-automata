@@ -114,6 +114,8 @@ storage.open.call(storageContext, config.storage)
             }
         });
 
+        verbose(extractorPromises.length + " extractors running...");
+
         Promise.all(extractorPromises)
             .then(function (/*statuses*/) {
                 verbose("end of extractors, waiting for pending extractions...");
