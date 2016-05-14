@@ -105,8 +105,13 @@ storage.open.call(storageContext, config.storage)
 
         verbose("Running extractors...");
         config.extractors.forEach(function (extractorConfig) {
-            var extractorModule = require("./extractors/" + extractorConfig.type + ".js");
-            extractorPromises.push(extractorModule.start.call({}, extractorConfig, recordExtracted));
+            try {
+                var extractorModule = require("./extractors/" + extractorConfig.type + ".js");
+                extractorPromises.push(extractorModule.start.call({}, extractorConfig, recordExtracted));
+            } catch (e) {
+                console.error(e);
+                verbose(JSON.stringify(extractorConfig));
+            }
         });
 
         Promise.all(extractorPromises)
