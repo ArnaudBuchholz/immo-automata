@@ -13,9 +13,9 @@ module.exports = {
 
     // @inheritdoc storage#find
     find: function (config, uid) {
-        var record = config.records[uid];
-        if (!record) {
-            record = null;
+        var record = null;
+        if (config.records) {
+            record = config.records[uid] || null;
         }
         return Promise.resolve(record);
     },
