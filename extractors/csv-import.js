@@ -2,12 +2,14 @@
 
 /*
 {
-    type: "import-csv",
+    type: "csv-import",
     path: "filename",
     delimiter: ",",
     quote: "\"",
     escape: "\"",
-    id: "pattern-{COLUMN}"
+    mappings: {
+        "record-field": "pattern-{record-field}"
+   }
 }
 */
 
@@ -41,20 +43,17 @@ module.exports = {
                     relax: true,
                     "skip_empty_lines": true
                 });
-            stream.on("readable", function () {
-                var data = stream.read();
-                while (data) {
-                    parser.write(data);
-                    data = stream.read();
-                }
-            });
+            stream.pipe(parser);
             parser.on("readable", function () {
                 var record = parser.read();
                 while (record) {
-                    record[CONSTANTS.RECORD_UID] = Math.floor(Math.random() * 10000);
+                    helpers.mapColumns(record, config.mappings);
                     callback(record);
                     record = parser.read();
                 }
+            });
+            parser.on("end", function () {
+                done();
             });
         } catch (e) {
             console.error(e);
