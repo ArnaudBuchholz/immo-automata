@@ -51,6 +51,26 @@ module.exports = {
             }
             return row;
         };
+    },
+
+    /**
+     * Used for CSV import: build new columns on the record by applying mapping dictionary
+     *
+     * @param {Object} record
+     * @param {Object} mapping
+     * @returns {Object} record
+     */
+    mapColumns: function (record, mapping) {
+        Object.keys(mapping).forEach(function (key) {
+            var value = mapping[key];
+            Object.keys(record).forEach(function (member) {
+                var search = "{" + member + "}";
+                if (-1 < value.indexOf(search)) {
+                    value = value.split(search).join(record[member]);
+                }
+            });
+            record[key] = value;
+        });
     }
 
 };
