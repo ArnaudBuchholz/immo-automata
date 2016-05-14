@@ -31,6 +31,26 @@ module.exports = {
         return deepEqual(obj1, obj2, {
             strict: true
         });
+    },
+
+    /**
+     * Used for CSV import: process columns definition
+     *
+     * @param {String[]} defaultColumns
+     * returns {Function}
+     */
+    getColumnsHandler: function (defaultColumns) {
+        if (defaultColumns) {
+            return function () {
+                return defaultColumns;
+            };
+        }
+        return function (row) {
+            while (!row[row.length - 1]) {
+                row.pop(); // Removes empty columns
+            }
+            return row;
+        };
     }
 
 };
