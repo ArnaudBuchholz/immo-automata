@@ -92,7 +92,7 @@ function recordExtracted (extractorRecord) {
 }
 
 verbose("Processing filters...");
-config.filters.forEach(function (filterConfig) {
+(config.filters || []).forEach(function (filterConfig) {
     var filterModule = require("./filters/" + filterConfig.type + ".js");
     filters.push(filterModule.filter.bind({}, filterConfig));
 });
