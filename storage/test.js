@@ -22,7 +22,9 @@ module.exports = {
 
     // @inheritdoc storage#add
     add: function (config, record, updated) {
-        console.log(record[CONSTANTS.RECORD_UID] + "(" + updated + "): " + JSON.stringify(record));
+        if (config.verbose) {
+            console.log(record[CONSTANTS.RECORD_UID] + "(" + updated + "): " + JSON.stringify(record));
+        }
         return Promise.resolve();
     },
 
