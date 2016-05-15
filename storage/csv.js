@@ -4,14 +4,19 @@
 {
     type: "csv",
     path: "filename",
+    add-timestamp: false,
     delimiter: ",",
     quote: "\"",
     escape: "\"",
+    types: {
+        updated: "boolean"
+    }
     columns: ["RUID", "NAME"]
 }
 */
 
 var CONSTANTS = require("../constants.js"),
+    helpers = require("../helpers.js"),
     fs = require("fs"),
     csv = require("csv");
 
@@ -45,19 +50,20 @@ module.exports = {
                         relax: true,
                         "skip_empty_lines": true
                     });
-                stream.on("readable", function () {
-                    var data = stream.read();
-                    while (data) {
-                        parser.write(data);
-                        data = stream.read();
-                    }
-                });
+                stream.pipe(parser);
                 parser.on("readable", function () {
                     var record = parser.read();
                     while (record) {
+                        helpers.convertColumns(record, config.types || {});
                         ctx.records[record[CONSTANTS.RECORD_UID]] = record;
+                        if (config.verbose) {
+                            console.log(JSON.stringify(record));
+                        }
                         record = parser.read();
                     }
+                });
+                parser.on("end", function () {
+                    resolve();
                 });
             } catch (e) {
                 reject(e);
