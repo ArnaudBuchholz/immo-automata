@@ -30,7 +30,9 @@ module.exports = {
 
     // @inheritdoc storage#close
     close: function (/*config*/) {
-        return Promise.resolve();
+        return Promise.resolve({
+            "test": "OK"
+        });
     }
 
 };
