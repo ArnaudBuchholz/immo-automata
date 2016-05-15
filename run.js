@@ -17,9 +17,10 @@ var CONSTANTS = require("./constants.js"),
     extractionDone,
     statistics = {
         extracted: 0,
+        filtered: 0,
+        untouched: 0,
         created: 0,
-        updated: 0,
-        filtered: 0
+        updated: 0
     };
 
 if (enableVerbose) {
@@ -50,6 +51,7 @@ function recordExtracted (extractorRecord) {
         var updated;
         if (storedRecord) {
             if (helpers.equal(storedRecord, record)) {
+                ++statistics.untouched;
                 done();
                 return;
             }
@@ -154,10 +156,11 @@ storage.open.call(storageContext, storageConfig)
                 return storage.close.call(storageContext);
             })
             .then(function () {
-                verbose("Items extracted : " + statistics.extracted);
-                verbose("Items filtered  : " + statistics.filtered);
-                verbose("Records created : " + statistics.created);
-                verbose("Records updated : " + statistics.updated);
+                verbose("Items extracted   : " + statistics.extracted);
+                verbose("Items filtered    : " + statistics.filtered);
+                verbose("Records untouched : " + statistics.untouched);
+                verbose("Records created   : " + statistics.created);
+                verbose("Records updated   : " + statistics.updated);
                 verbose("end.");
             });
     }, function (reason) {
