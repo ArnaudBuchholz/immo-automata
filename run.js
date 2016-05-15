@@ -14,7 +14,12 @@ var CONSTANTS = require("./constants.js"),
     storage,
     pendingExtractions = 0,
     extractionPromise,
-    extractionDone;
+    extractionDone,
+    statistics = {
+        extracted: 0,
+        created: 0,
+        updated: 0
+    };
 
 if (enableVerbose) {
     verbose = console.log.bind(console);
@@ -27,6 +32,7 @@ function recordExtracted (extractorRecord) {
         record,
         storedRecord;
     ++pendingExtractions;
+    ++statistics.extracted;
 
     function done () {
         if (0 === --pendingExtractions && extractionDone) {
@@ -47,8 +53,10 @@ function recordExtracted (extractorRecord) {
                 return;
             }
             updated = true;
+            ++statistics.updated;
         } else {
             updated = false;
+            ++statistics.created;
         }
         storage.add.call(storageContext, storageConfig, record, updated).then(done, failed);
     }
@@ -144,6 +152,9 @@ storage.open.call(storageContext, storageConfig)
                 return storage.close.call(storageContext);
             })
             .then(function () {
+                verbose("Items extracted : " + statistics.extracted);
+                verbose("Records created : " + statistics.created);
+                verbose("Records updated : " + statistics.updated);
                 verbose("end.");
             });
     }, function (reason) {
