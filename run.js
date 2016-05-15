@@ -155,12 +155,20 @@ storage.open.call(storageContext, storageConfig)
                 verbose("end of extraction, waiting for storage closing...");
                 return storage.close.call(storageContext);
             })
-            .then(function () {
-                verbose("Items extracted   : " + statistics.extracted);
-                verbose("Items filtered    : " + statistics.filtered);
-                verbose("Records untouched : " + statistics.untouched);
-                verbose("Records created   : " + statistics.created);
-                verbose("Records updated   : " + statistics.updated);
+            .then(function (storageStatistics) {
+                verbose("Extraction statistics:");
+                verbose("\titems extracted: " + statistics.extracted);
+                verbose("\titems filtered: " + statistics.filtered);
+                verbose("Records statistics:");
+                verbose("\tnot modified: " + statistics.untouched);
+                verbose("\tcreated: " + statistics.created);
+                verbose("\tupdated: " + statistics.updated);
+                if (storageStatistics) {
+                    verbose("Storage statistics:");
+                    Object.keys(storageStatistics).forEach(function (label) {
+                        verbose("\t" + label + ": " + storageStatistics[label]);
+                    });
+                }
                 verbose("end.");
             });
     }, function (reason) {

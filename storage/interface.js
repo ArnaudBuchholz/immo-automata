@@ -48,7 +48,8 @@ module.exports = {
      * An empty object is allocated and used as a this context for the storage.
      *
      * @param {Object} config Storage specific config
-     * @returns {Promise}
+     * @returns {Promise<Object|undefined>} Resolved when closed,
+     *  may provide storage statistics dictionary (label: value)
      */
     close: function (config) {
         return Promise.resolve();
