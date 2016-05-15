@@ -130,11 +130,14 @@ storage.open.call(storageContext, storageConfig)
 
         Promise.all(extractorPromises)
             .then(function (/*statuses*/) {
-                verbose("end of extractors, waiting for pending extractions...");
-                extractionPromise = new Promise(function (resolve) {
-                    extractionDone = resolve;
-                });
-                return extractionPromise;
+                if (pendingExtractions) {
+                    verbose("end of extractors, waiting for pending extractions...");
+                    extractionPromise = new Promise(function (resolve) {
+                        extractionDone = resolve;
+                    });
+                    return extractionPromise;
+                }
+                return Promise.resolve();
             })
             .then(function () {
                 verbose("end of extraction, waiting for storage closing...");
