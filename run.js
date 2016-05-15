@@ -153,7 +153,7 @@ storage.open.call(storageContext, storageConfig)
             })
             .then(function () {
                 verbose("end of extraction, waiting for storage closing...");
-                return storage.close.call(storageContext);
+                return storage.close.call(storageContext, storageConfig);
             })
             .then(function (storageStatistics) {
                 verbose("Extraction statistics:");
