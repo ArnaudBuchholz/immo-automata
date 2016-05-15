@@ -4,7 +4,7 @@
 {
     type: "csv",
     path: "filename",
-    add-timestamp: false,
+    add-file-timestamp: false,
     delimiter: ",",
     quote: "\"",
     escape: "\"",
@@ -18,6 +18,7 @@
 var CONSTANTS = require("../constants.js"),
     helpers = require("../helpers.js"),
     fs = require("fs"),
+    path = require("path"),
     csv = require("csv"),
     CSV_STATE = "__csv_state__";
 
@@ -99,10 +100,20 @@ module.exports = {
     },
 
     // @inheritdoc storage#close
-    close: function (/*config*/) {
+    close: function (config) {
         var ctx = this,
             obsoleteCount = 0,
-            totalCount = 0;
+            totalCount = 0,
+            statistics,
+            outputFileName;
+        if (config["add-file-timestamp"]) {
+            outputFileName = path.parse(config.path);
+            delete outputFileName.base;
+            outputFileName.name += "." + helpers.getTimestamp();
+            outputFileName = path.format(outputFileName);
+        } else {
+            outputFileName = config.path;
+        }
         Object.keys(ctx.records).forEach(function (ruid) {
             ++totalCount;
             var record = ctx.records[ruid];
@@ -110,10 +121,12 @@ module.exports = {
                 ++obsoleteCount;
             }
         });
-        return Promise.resolve({
+        statistics = {
+            "output filename": outputFileName,
             "obsolete records": obsoleteCount,
             "total number of records": totalCount
-        });
+        };
+        return Promise.resolve(statistics);
     }
 
 };
