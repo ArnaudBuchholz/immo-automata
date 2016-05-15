@@ -9,6 +9,7 @@ var CONSTANTS = require("./constants.js"),
     verbose,
     filters = [],
     extractorPromises = [],
+    storageConfig,
     storageContext,
     storage,
     pendingExtractions = 0,
@@ -49,7 +50,7 @@ function recordExtracted (extractorRecord) {
         } else {
             updated = false;
         }
-        storage.add.call(storageContext, config.storage, record, updated).then(done, failed);
+        storage.add.call(storageContext, storageConfig, record, updated).then(done, failed);
     }
 
     function loop () {
@@ -69,7 +70,7 @@ function recordExtracted (extractorRecord) {
             }, failed);
     }
 
-    storage.find.call(storageContext, config.storage, extractorRecord[CONSTANTS.RECORD_UID])
+    storage.find.call(storageContext, storageConfig, extractorRecord[CONSTANTS.RECORD_UID])
         .then(function (storageRecord) {
 
             record = {};
@@ -91,21 +92,32 @@ function recordExtracted (extractorRecord) {
     return Promise.resolve();
 }
 
+function checkForExtension (typedConfig) {
+    var extension = typedConfig[".extends"];
+    if (extension) {
+        return helpers.extend(typedConfig, config.commons[extension]);
+    }
+    return typedConfig;
+}
+
 verbose("Processing filters...");
 (config.filters || []).forEach(function (filterConfig) {
+    filterConfig = checkForExtension(filterConfig);
     var filterModule = require("./filters/" + filterConfig.type + ".js");
     filters.push(filterModule.filter.bind({}, filterConfig));
 });
 
 verbose("Opening storage...");
+storageConfig = checkForExtension(config.storage);
 storageContext = {};
-storage = require("./storage/" + config.storage.type + ".js");
-storage.open.call(storageContext, config.storage)
+storage = require("./storage/" + storageConfig.type + ".js");
+storage.open.call(storageContext, storageConfig)
     .then(function () {
 
         verbose("Running extractors...");
         config.extractors.forEach(function (extractorConfig) {
             try {
+                extractorConfig = checkForExtension(extractorConfig);
                 var extractorModule = require("./extractors/" + extractorConfig.type + ".js");
                 extractorPromises.push(extractorModule.start.call({}, extractorConfig, recordExtracted));
             } catch (e) {
