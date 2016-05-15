@@ -18,7 +18,8 @@
 var CONSTANTS = require("../constants.js"),
     helpers = require("../helpers.js"),
     fs = require("fs"),
-    csv = require("csv");
+    csv = require("csv"),
+    CSV_STATE = "__csv_state__";
 
 module.exports = {
 
@@ -74,7 +75,9 @@ module.exports = {
     // @inheritdoc storage#find
     find: function (config, uid) {
         var record = this.records[uid];
-        if (!record) {
+        if (record) {
+            record[CSV_STATE] = "fetched";
+        } else {
             record = null;
         }
         return Promise.resolve(record);
@@ -82,13 +85,35 @@ module.exports = {
 
     // @inheritdoc storage#add
     add: function (config, record, updated) {
-        console.log(record[CONSTANTS.RECORD_UID] + "(" + updated + "): " + JSON.stringify(record));
+        var ruid = record[CONSTANTS.RECORD_UID];
+        if (updated) {
+            record[CSV_STATE] = "updated";
+        } else {
+            record[CSV_STATE] = "created";
+        }
+        this.records[ruid] = record;
+        if (config.verbose) {
+            console.log(ruid + "(" + updated + "): " + JSON.stringify(record));
+        }
         return Promise.resolve();
     },
 
     // @inheritdoc storage#close
     close: function (/*config*/) {
-        return Promise.resolve();
+        var ctx = this,
+            obsoleteCount = 0,
+            totalCount = 0;
+        Object.keys(ctx.records).forEach(function (ruid) {
+            ++totalCount;
+            var record = ctx.records[ruid];
+            if (undefined === record[CSV_STATE]) {
+                ++obsoleteCount;
+            }
+        });
+        return Promise.resolve({
+            "obsolete records": obsoleteCount,
+            "total number of records": totalCount
+        });
     }
 
 };
