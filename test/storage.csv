@@ -1,4 +1,4 @@
-RUID, NAME
-1, Arnaud
-2, Nausicaa
-3, Maxime
+RUID, label, filtered, isVoyel
+serie-2.4,k,true,false
+serie-2.7,z,true,false
+serie-1.5,y,true,true
