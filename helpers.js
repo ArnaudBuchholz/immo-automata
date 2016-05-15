@@ -93,6 +93,22 @@ module.exports = {
             }
             record[fieldName] = value;
         });
+    },
+
+    /**
+     * Gets a formatted timestamp
+     *
+     * @returns {String}
+     */
+    getTimestamp: function () {
+        var now = new Date();
+        function z (value) {
+            if (value < 10) {
+                return "0" + value;
+            }
+            return value.toString();
+        }
+        return [now.getFullYear(), z(now.getMonth() + 1), z(now.getDate())].join("-");
     }
 
 };
