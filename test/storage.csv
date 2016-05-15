@@ -1,4 +1,4 @@
-RUID, label, filtered, isVoyel
-serie-2.4,k,true,false
-serie-2.7,z,true,false
-serie-1.5,y,true,true
+RUID,label,filtered,isVoyel,count
+serie-2.4,k,true,false,10
+serie-2.7,z,true,false,10
+serie-1.5,y,true,true,10
