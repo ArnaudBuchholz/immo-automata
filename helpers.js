@@ -56,8 +56,8 @@ module.exports = {
     /**
      * Used for CSV import: build new columns on the record by applying mapping dictionary
      *
-     * @param {Object} record
-     * @param {Object} mapping
+     * @param {Object} record Record to update
+     * @param {Object} mapping Field definition dictionary
      * @returns {Object} record
      */
     mapColumns: function (record, mapping) {
@@ -70,6 +70,28 @@ module.exports = {
                 }
             });
             record[key] = value;
+        });
+    },
+
+    /**
+     * Used for CSV records: convert fields based on types definition
+     *
+     * @param {Object} record Record to convert
+     * @param {Object} types Types definition dictionary, supported types are:
+     * - boolean
+     * - number
+     * @returns {Object} record
+     */
+    convertColumns: function (record, types) {
+        Object.keys(types).forEach(function (fieldName) {
+            var type = types[fieldName],
+                value = record[fieldName];
+            if ("boolean" === type) {
+                value = "true" === value;
+            } else if ("number" === type) {
+                value = parseFloat(value);
+            }
+            record[fieldName] = value;
         });
     }
 
