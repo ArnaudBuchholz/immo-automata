@@ -74,15 +74,15 @@ module.exports = {
     },
 
     /**
-     * Used for CSV records: convert fields based on types definition
+     * Used to read CSV records: adapt CSV fields based on types definition
      *
-     * @param {Object} record Record to convert
+     * @param {Object} record Record read from CSV
      * @param {Object} types Types definition dictionary, supported types are:
      * - boolean
      * - number
      * @returns {Object} record
      */
-    convertColumns: function (record, types) {
+    deserializeColumns: function (record, types) {
         Object.keys(types).forEach(function (fieldName) {
             var type = types[fieldName],
                 value = record[fieldName];
@@ -92,6 +92,22 @@ module.exports = {
                 value = parseFloat(value);
             }
             record[fieldName] = value;
+        });
+    },
+
+    /**
+     * Used to write CSV records: adapt CSV fields based on types definition
+     *
+     * @param {Object} record Record to write to CSV
+     * @param {Object} types Types definition dictionary, supported types are:
+     * - boolean
+     * - number
+     * @returns {Object} record
+     */
+    serializeColumns: function (record, types) {
+        Object.keys(types).forEach(function (fieldName) {
+            var value = record[fieldName];
+            record[fieldName] = value.toString();
         });
     },
 
