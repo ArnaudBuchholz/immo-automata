@@ -46,6 +46,14 @@ module.exports = {
                         "skip_empty_lines": true
                     });
                 stream.pipe(parser);
+                stream.on("error", function (e) {
+                    if (-4058 === e.errno) {
+                        // no file
+                        resolve();
+                    } else {
+                        reject(e);
+                    }
+                });
                 parser.on("readable", function () {
                     var record = parser.read();
                     while (record) {
