@@ -28,13 +28,6 @@ module.exports = {
     open: function (config) {
         var ctx = this;
 
-        function getColumns (row) {
-            if (config.columns) {
-                return config.columns;
-            }
-            return row;
-        }
-
         ctx.records = {};
 
         return new Promise(function (resolve, reject) {
@@ -48,7 +41,7 @@ module.exports = {
                         delimiter: config.delimiter || ",",
                         quote: config.quote || "\"",
                         escape: config.escape || "\"",
-                        columns: getColumns,
+                        columns: helpers.getColumnsHandler(),
                         relax: true,
                         "skip_empty_lines": true
                     });
@@ -56,7 +49,7 @@ module.exports = {
                 parser.on("readable", function () {
                     var record = parser.read();
                     while (record) {
-                        helpers.convertColumns(record, config.types || {});
+                        helpers.deserializeColumns(record, config.types || {});
                         ctx.records[record[CONSTANTS.RECORD_UID]] = record;
                         if (config.verbose) {
                             console.log(JSON.stringify(record));
@@ -105,22 +98,39 @@ module.exports = {
             obsoleteCount = 0,
             totalCount = 0,
             statistics,
-            outputFileName;
+            outputFileName,
+            stream,
+            stringifier;
         if (config["add-file-timestamp"]) {
             outputFileName = path.parse(config.path);
-            delete outputFileName.base;
-            outputFileName.name += "." + helpers.getTimestamp();
+            outputFileName.base = outputFileName.name += "." + helpers.getTimestamp() + outputFileName.ext;
             outputFileName = path.format(outputFileName);
         } else {
             outputFileName = config.path;
         }
+        stream = fs.createWriteStream(outputFileName, {
+            flags: "w",
+            defaultEncoding: "utf8",
+            autoClose: true
+        });
+        stringifier = csv.stringify({
+            delimiter: config.delimiter || ",",
+            quote: config.quote || "\"",
+            escape: config.escape || "\"",
+            header: true,
+            columns: config.columns
+        });
+        stringifier.pipe(stream);
         Object.keys(ctx.records).forEach(function (ruid) {
             ++totalCount;
             var record = ctx.records[ruid];
             if (undefined === record[CSV_STATE]) {
                 ++obsoleteCount;
             }
+            helpers.serializeColumns(record, config.types || {});
+            stringifier.write(record);
         });
+        stringifier.end();
         statistics = {
             "output filename": outputFileName,
             "obsolete records": obsoleteCount,
