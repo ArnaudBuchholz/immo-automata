@@ -65,21 +65,25 @@ function recordExtracted (extractorRecord) {
     }
 
     function loop () {
-        filters[idx](record)
-            .then(function (filteredRecord) {
-                if (filteredRecord) {
-                    record = filteredRecord;
-                    if (++idx < filters.length) {
-                        loop();
+        try {
+            filters[idx](record)
+                .then(function (filteredRecord) {
+                    if (filteredRecord) {
+                        record = filteredRecord;
+                        if (++idx < filters.length) {
+                            loop();
+                        } else {
+                            succeeded();
+                        }
                     } else {
-                        succeeded();
+                        ++statistics.filtered;
+                        done();
                     }
-                } else {
-                    ++statistics.filtered;
-                    done();
-                }
 
-            }, failed);
+                }, failed);
+        } catch (e) {
+            failed(e);
+        }
     }
 
     storage.find.call(storageContext, storageConfig, extractorRecord[CONSTANTS.RECORD_UID])
