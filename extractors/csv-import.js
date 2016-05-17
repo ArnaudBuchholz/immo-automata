@@ -9,12 +9,14 @@
     escape: "\"",
     mappings: {
         "record-field": "pattern-{record-field}"
+   },
+   types: {
+       updated: "boolean"
    }
 }
 */
 
-var CONSTANTS = require("../constants.js"),
-    helpers = require("../helpers.js"),
+var helpers = require("../helpers.js"),
     fs = require("fs"),
     csv = require("csv");
 
@@ -47,7 +49,8 @@ module.exports = {
             parser.on("readable", function () {
                 var record = parser.read();
                 while (record) {
-                    helpers.mapColumns(record, config.mappings);
+                    helpers.mapColumns(record, config.mappings || {});
+                    helpers.deserializeColumns(record, config.types || {});
                     callback(record);
                     record = parser.read();
                 }
