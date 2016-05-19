@@ -19,7 +19,7 @@ module.exports = {
     filter: function (config, record) {
         var match;
         if (config.field) {
-            match = record[config.field] === config.value;
+            match = record[config.field].toString() === config.value;
         } else {
             match = true;
         }
