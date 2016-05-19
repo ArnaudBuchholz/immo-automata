@@ -154,6 +154,18 @@ module.exports = {
             return value.toString();
         }
         return [now.getFullYear(), z(now.getMonth() + 1), z(now.getDate())].join("-");
+    },
+
+    /**
+     * Returns a promise that is resolve after the given delay.
+     *
+     * @param {Number} delay in ms
+     * @returns {Promise}
+     */
+    wait: function (delay) {
+        return new Promise(function (resolve) {
+            setTimeout(resolve, time);
+        });
     }
 
 };
