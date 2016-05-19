@@ -1,9 +1,9 @@
 "use strict";
 
 var CONSTANTS = require("../constants.js"),
+    helpers = require("../helpers.js"),
     webDriver = require("selenium-webdriver"),
-    By = require("selenium-webdriver").By,
-    until = require("selenium-webdriver").until;
+    By = require("selenium-webdriver").By;
 
 module.exports = {
 
@@ -12,7 +12,7 @@ module.exports = {
      *
      * http://www.centris.ca
      */
-    start: function (config, callback) {
+    start: function (config, callback, log) {
         var done,
             promise = new Promise(function (resolve) {
                 done = resolve;
@@ -20,25 +20,26 @@ module.exports = {
             chrome = new webDriver.Builder()
                 .forBrowser("chrome")
                 .build();
+        log("Opening http://www.centris.ca/");
         chrome.get("http://www.centris.ca/")
             // Process search field
             .then(function () {
-                verbose("Locating search control");
+                log("Locating search control");
                 return chrome.findElements(By.id("search"))
                     .then(function (elements) {
-                        verbose("Typing '" + config.search.centris.town + "'");
+                        log("Typing '" + config.search.centris.town + "'");
                         return elements[0].sendKeys(config.search.centris.town);
                     })
                     .then(function () {
-                        verbose("Wait 1 second for autocomplete to appear");
-                        return wait(1000); // TODO find a better way
+                        log("Wait 1 second for autocomplete to appear");
+                        return helpers.wait(1000); // TODO find a better way
                     })
                     .then(function () {
-                        verbose("Getting autocomplete");
+                        log("Getting autocomplete");
                         return chrome.findElements(By.className("ui-autocomplete"));
                     })
                     .then(function (elements) {
-                        verbose("Listing second autocomplete children"); // TODO find a better way
+                        log("Listing second autocomplete children"); // TODO find a better way
                         return elements[1].findElements(By.tagName("li"));
                     })
                     .then(function (elements) {
@@ -50,14 +51,14 @@ module.exports = {
                         return Promise.all(promises)
                             .then(function (texts) {
                                 texts.every(function (text, index) {
-                                    verbose(">> " + text);
+                                    log(">> " + text);
                                     if (-1 < text.indexOf(config.search.centris.suburb)) {
                                         selectedIndex = index;
                                         return false;
                                     }
                                     return true;
                                 });
-                                verbose("Selecting index " + selectedIndex);
+                                log("Selecting index " + selectedIndex);
                                 if (undefined === selectedIndex) {
                                     return Promise.reject("Unable to locate '" + config.search.centris.suburb + "'");
                                 }
@@ -67,7 +68,7 @@ module.exports = {
             })
             // Process slider
             .then(function () {
-                verbose("Finding price slider");
+                log("Finding price slider");
                 var sliderRightHandle;
                 return chrome.findElements(By.id("slider"))
                     .then(function (elements) {
@@ -108,7 +109,7 @@ module.exports = {
             })
             // Open advanced criteria
             .then(function () {
-                verbose("Open advanced criteria");
+                log("Open advanced criteria");
                 return chrome.findElements(By.id("btn-advanced-criterias"))
                     .then(function (elements) {
                         return elements[0].click();
@@ -116,7 +117,7 @@ module.exports = {
             })
             // Process house type
             .then(function () {
-                verbose("Process house type");
+                log("Process house type");
                 return chrome.findElements(By.id("item-property"))
                     .then(function (elements) {
                         return elements[0].findElements(By.tagName("button"));
@@ -131,7 +132,7 @@ module.exports = {
                             .then(function (texts) {
                                 var clicked = [];
                                 texts.forEach(function (text, index) {
-                                    verbose(">> " + text);
+                                    log(">> " + text);
                                     if (-1 < config.search.centris["house-types"].indexOf(text)) {
                                         clicked.push(elements[index].click());
                                     }
@@ -142,7 +143,7 @@ module.exports = {
             })
             // Rooms
             .then(function () {
-                verbose("Process number of rooms");
+                log("Process number of rooms");
                 return chrome.findElements(By.id("select-room"))
                     .then(function (elements) {
                         var dropDown = elements[0];
@@ -162,14 +163,14 @@ module.exports = {
                                 return Promise.all(promises)
                                     .then(function (texts) {
                                         texts.every(function (text, index) {
-                                            verbose(">> " + text);
+                                            log(">> " + text);
                                             if (config.search.centris["room-type"] === text) {
                                                 selectedIndex = index;
                                                 return false;
                                             }
                                             return true;
                                         });
-                                        verbose("Selecting index " + selectedIndex);
+                                        log("Selecting index " + selectedIndex);
                                         if (undefined === selectedIndex) {
                                             return Promise.reject("Unable to locate '" + config.search.centris["room-type"] + "'");
                                         }
@@ -180,13 +181,13 @@ module.exports = {
             })
             // SUBMIT SEARCH
             .then(function () {
-                verbose("Submit search");
+                log("Submit search");
                 return chrome.findElements(By.id("submit-search"))
                     .then(function (elements) {
                         return elements[0].click();
                     })
                     .then(function () {
-                        return wait(5000); // TODO find a way to wait for the page to be loaded
+                        return helpers.wait(5000); // TODO find a way to wait for the page to be loaded
                     })
                     .then(function () {
                         return chrome.findElements(By.id("ButtonViewSummary"));
