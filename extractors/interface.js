@@ -20,10 +20,12 @@ module.exports = {
      * @param {Object} config Extractor specific config
      * @param {Function} callback:
      *  function (record) { return Promise.resolve(); }
+     * @param {Function} log function
+     *  function (text) {}
      *
      * @returns {Promise} A promise resolved when the extractor ends
      */
-    start: function (config, callback) {
+    start: function (config, callback, log) {
         return Promise.resolve();
     }
 

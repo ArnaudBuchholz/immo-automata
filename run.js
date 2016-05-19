@@ -21,12 +21,13 @@ var CONSTANTS = require("./constants.js"),
         untouched: 0,
         created: 0,
         updated: 0
-    };
+    },
+    nop = function () {};
 
 if (enableVerbose) {
     verbose = console.log.bind(console);
 } else {
-    verbose = function () {};
+    verbose = nop;
 }
 
 function recordExtracted (extractorRecord) {
@@ -131,11 +132,19 @@ storage.open.call(storageContext, storageConfig)
     .then(function () {
 
         verbose("Running extractors...");
-        config.extractors.forEach(function (extractorConfig) {
+        config.extractors.forEach(function (extractorConfig, index) {
             try {
                 extractorConfig = checkForExtension(extractorConfig);
-                var extractorModule = require("./extractors/" + extractorConfig.type + ".js");
-                extractorPromises.push(extractorModule.start.call({}, extractorConfig, recordExtracted));
+                var extractorModule = require("./extractors/" + extractorConfig.type + ".js"),
+                    log;
+                if (extractorConfig.verbose) {
+                    log = function (text) {
+                        console.log("[extractor" + index + "] " + text);
+                    };
+                } else {
+                    log = nop;
+                }
+                extractorPromises.push(extractorModule.start.call({}, extractorConfig, recordExtracted, log));
             } catch (e) {
                 console.error(e);
                 verbose(JSON.stringify(extractorConfig));
