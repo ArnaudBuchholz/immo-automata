@@ -16,3 +16,7 @@ tmp/*
 # Editors
 
 .idea
+
+# Selenium log file
+
+debug.log
