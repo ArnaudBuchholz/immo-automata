@@ -5,6 +5,40 @@ var CONSTANTS = require("../constants.js"),
     webDriver = require("selenium-webdriver"),
     By = require("selenium-webdriver").By;
 
+function extractProperty (chrome, callback) {
+    var record = {};
+    return chrome.getCurrentUrl()
+        .then(function (url) {
+            record[CONSTANTS.TYPE] = "centris";
+            record[CONSTANTS.RECORD_UID] = "centris." + url.split("/").pop().split("?")[0];
+            record[CONSTANTS.URL] = url;
+            return chrome.findElements(By.id("BuyPrice"));
+        })
+        .then(function (elements) {
+            return elements[0].getAttribute("content");
+        })
+        .then(function (price) {
+            price = parseInt(price, 10);
+            if (!isNaN(price)) {
+                record[CONSTANTS.PRICE] = price;
+            }
+        })
+        .then(function () {
+            return chrome.findElements(By.className("onmap"));
+        })
+        .then(function (elements) {
+            return elements[0].findElements(By.tagName("a"));
+        })
+        .then(function (elements) {
+            return elements[0].getAttribute("onclick");
+        })
+        .then(function (text) {
+            var mapUrl = text.split("('")[1].split("')")[0];
+            record[CONSTANTS.GPS] = mapUrl.split("&q=")[1];
+            return callback(record);
+        });
+}
+
 module.exports = {
 
     /**
@@ -13,22 +47,18 @@ module.exports = {
      * http://www.centris.ca
      */
     start: function (config, callback, log) {
-        var done,
-            promise = new Promise(function (resolve) {
-                done = resolve;
-            }),
-            chrome = new webDriver.Builder()
-                .forBrowser("chrome")
-                .build();
+        var chrome = new webDriver.Builder()
+            .forBrowser("chrome")
+            .build();
         log("Opening http://www.centris.ca/");
-        chrome.get("http://www.centris.ca/")
+        return chrome.get("http://www.centris.ca/")
             // Process search field
             .then(function () {
                 log("Locating search control");
                 return chrome.findElements(By.id("search"))
                     .then(function (elements) {
-                        log("Typing '" + config.search.centris.town + "'");
-                        return elements[0].sendKeys(config.search.centris.town);
+                        log("Typing '" + config.town + "'");
+                        return elements[0].sendKeys(config.town);
                     })
                     .then(function () {
                         log("Wait 1 second for autocomplete to appear");
@@ -52,7 +82,7 @@ module.exports = {
                             .then(function (texts) {
                                 texts.every(function (text, index) {
                                     log(">> " + text);
-                                    if (-1 < text.indexOf(config.search.centris.suburb)) {
+                                    if (-1 < text.indexOf(config.suburb)) {
                                         selectedIndex = index;
                                         return false;
                                     }
@@ -60,7 +90,7 @@ module.exports = {
                                 });
                                 log("Selecting index " + selectedIndex);
                                 if (undefined === selectedIndex) {
-                                    return Promise.reject("Unable to locate '" + config.search.centris.suburb + "'");
+                                    return Promise.reject("Unable to locate '" + config.suburb + "'");
                                 }
                                 return elements[selectedIndex].click();
                             });
@@ -81,30 +111,23 @@ module.exports = {
                         return sliderRightHandle.click();
                     })
                     .then(function () {
-                        var done,
-                            promise = new Promise(function (resolve) {
-                                done = resolve;
-                            });
-                        function moveLeft () {
+                        return helpers.asyncLoop(function () {
                             return sliderRightHandle.sendKeys(webDriver.Key.ARROW_LEFT)
                                 .then(function () {
                                     return chrome.findElements(By.id("currentPrixMax"));
                                 })
                                 .then(function (elements) {
                                     return elements[0].getAttribute("data-value");
+                                })
+                                .then(function (price) {
+                                    price = parseInt(price, 10);
+                                    log(">> " + price);
+                                    if (price <= config["max-price"]) {
+                                        return false;
+                                    }
+                                    return true;
                                 });
-                        }
-                        function processPrice (price) {
-                            price = parseInt(price, 10);
-                            console.log(">> " + price);
-                            if (price <= config.search.centris["max-price"]) {
-                                done();
-                            } else {
-                                moveLeft().then(processPrice);
-                            }
-                        }
-                        moveLeft().then(processPrice);
-                        return promise;
+                        });
                     });
             })
             // Open advanced criteria
@@ -123,8 +146,7 @@ module.exports = {
                         return elements[0].findElements(By.tagName("button"));
                     })
                     .then(function (elements) {
-                        var promises = [],
-                            selectedIndex;
+                        var promises = [];
                         elements.forEach(function (element) {
                             promises.push(element.getText());
                         });
@@ -133,7 +155,7 @@ module.exports = {
                                 var clicked = [];
                                 texts.forEach(function (text, index) {
                                     log(">> " + text);
-                                    if (-1 < config.search.centris["house-types"].indexOf(text)) {
+                                    if (-1 < config["house-types"].indexOf(text)) {
                                         clicked.push(elements[index].click());
                                     }
                                 });
@@ -147,35 +169,35 @@ module.exports = {
                 return chrome.findElements(By.id("select-room"))
                     .then(function (elements) {
                         var dropDown = elements[0];
-                        dropDown.click()
+                        return dropDown.click()
                             .then(function () {
                                 return dropDown.findElements(By.className("dropdown"));
-                            })
-                            .then(function (elements) {
-                                return elements[0].findElements(By.tagName("li"));
-                            })
-                            .then(function (elements) {
-                                var promises = [],
-                                    selectedIndex;
-                                elements.forEach(function (element) {
-                                    promises.push(element.getAttribute("data-option-value"));
+                            });
+                    })
+                    .then(function (elements) {
+                        return elements[0].findElements(By.tagName("li"));
+                    })
+                    .then(function (elements) {
+                        var promises = [],
+                            selectedIndex;
+                        elements.forEach(function (element) {
+                            promises.push(element.getAttribute("data-option-value"));
+                        });
+                        return Promise.all(promises)
+                            .then(function (texts) {
+                                texts.every(function (text, index) {
+                                    log(">> " + text);
+                                    if (config["room-type"] === text) {
+                                        selectedIndex = index;
+                                        return false;
+                                    }
+                                    return true;
                                 });
-                                return Promise.all(promises)
-                                    .then(function (texts) {
-                                        texts.every(function (text, index) {
-                                            log(">> " + text);
-                                            if (config.search.centris["room-type"] === text) {
-                                                selectedIndex = index;
-                                                return false;
-                                            }
-                                            return true;
-                                        });
-                                        log("Selecting index " + selectedIndex);
-                                        if (undefined === selectedIndex) {
-                                            return Promise.reject("Unable to locate '" + config.search.centris["room-type"] + "'");
-                                        }
-                                        return elements[selectedIndex].click();
-                                    });
+                                log("Selecting index " + selectedIndex);
+                                if (undefined === selectedIndex) {
+                                    return Promise.reject("Unable to locate '" + config["room-type"] + "'");
+                                }
+                                return elements[selectedIndex].click();
                             });
                     });
             })
@@ -197,48 +219,38 @@ module.exports = {
                     });
             })
             // Loop on properties
-            .then (function () {
-                var done,
-                    promise = new Promise(function (resolve) {
-                        done = resolve;
-                    });
-                function process () {
-                    // Due to synchronization issue, we may have to repeat once the extraction
-                    extractProperty()
-                        .then(next)
-                        .catch(function () {
-                            extractProperty().then(next);
-                        });
-                }
-                function next () {
-                    chrome.findElements(By.id("divWrapperPager"))
-                        .then(function (elements) {
-                            return elements[0].findElements(By.className("next"));
-                        })
-                        .then(function (elements) {
-                            var button = elements[0];
-                            button.getAttribute("class")
-                                .then(function (classNames) {
-                                    if (-1 < classNames.indexOf("inactive")) {
-                                        done();
-                                    } else {
-                                        button.click()
+            .then(function () {
+                return helpers.asyncLoop(function () {
+                    function onceExtracted () {
+                        return chrome.findElements(By.id("divWrapperPager"))
+                            .then(function (elements) {
+                                return elements[0].findElements(By.className("next"));
+                            })
+                            .then(function (elements) {
+                                var button = elements[0];
+                                return button.getAttribute("class")
+                                    .then(function (classNames) {
+                                        if (-1 < classNames.indexOf("inactive")) {
+                                            return false;
+                                        }
+                                        return button.click()
                                             .then(function () {
-                                                return wait(250);
+                                                return helpers.wait(250);
                                             })
                                             .then(function () {
-                                                process();
+                                                return true;
                                             });
-                                    }
-                                });
+                                    });
+                            });
+                    }
+                    // Due to synchronization issue, we may have to repeat once the extraction
+                    return extractProperty(chrome, callback)
+                        .then(onceExtracted, function () {
+                            return extractProperty(chrome, callback)
+                                .then(onceExtracted);
                         });
-                }
-                process();
-                return promise;
-            })
-            .then(done);
-
-        return promise;
+                });
+            });
     }
 
 };
