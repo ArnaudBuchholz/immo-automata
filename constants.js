@@ -1,6 +1,10 @@
 "use strict";
 
 module.exports = {
-    RECORD_UID: "RUID"
+    TYPE: "TYPE",
+    RECORD_UID: "RUID",
+    URL: "URL",
+    PRICE: "PRICE",
+    GPS: "GPS"
 
 };
