@@ -164,8 +164,29 @@ module.exports = {
      */
     wait: function (delay) {
         return new Promise(function (resolve) {
-            setTimeout(resolve, time);
+            setTimeout(resolve, delay);
         });
+    },
+
+    /**
+     * Asynchronous loop helper.
+     *
+     * @param {Function} iteration Function returning a promise that must resolve to a boolean:
+     * - true to call it again
+     * - false to stop
+     *
+     * @returns {Promise}
+     */
+    asyncLoop: function (iteration) {
+        function loop () {
+            return iteration()
+                .then(function (anotherCall) {
+                    if (anotherCall) {
+                        return loop();
+                    }
+                });
+        }
+        return loop();
     }
 
 };
