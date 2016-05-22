@@ -2,7 +2,8 @@
 
 var CONSTANTS = require("./constants.js"),
     helpers = require("./helpers.js"),
-    fs = require("fs"),
+    fs = require("fs-extra"),
+    path = require("path"),
     configFilename = process.argv[2] || "config",
     config = JSON.parse(fs.readFileSync(configFilename).toString()),
     enableVerbose = "-verbose" === process.argv[3],
@@ -21,8 +22,9 @@ var CONSTANTS = require("./constants.js"),
         untouched: 0,
         created: 0,
         updated: 0
-    },
-    nop = function () {};
+    };
+
+function nop () {}
 
 if (enableVerbose) {
     verbose = console.log.bind(console);
@@ -134,17 +136,25 @@ storage.open.call(storageContext, storageConfig)
         verbose("Running extractors...");
         config.extractors.forEach(function (extractorConfig, index) {
             try {
+                var tmpDir = path.join(process.env.TEMP, //eslint-disable-line no-process-env
+                    "immo-automata", index.toString());
+                fs.emptyDirSync(tmpDir);
+                var extractorContext = {
+                    _uid: index,
+                    _tmpDir: tmpDir
+                };
                 extractorConfig = checkForExtension(extractorConfig);
                 var extractorModule = require("./extractors/" + extractorConfig.type + ".js"),
                     log;
                 if (extractorConfig.verbose) {
                     log = function (text) {
-                        console.log("[extractor" + index + "] " + text);
+                        console.log("[extractor" + extractorContext._uid + "] " + text);
                     };
                 } else {
                     log = nop;
                 }
-                extractorPromises.push(extractorModule.start.call({}, extractorConfig, recordExtracted, log));
+                extractorPromises.push(extractorModule.start.call(extractorContext, extractorConfig, recordExtracted,
+                    log));
             } catch (e) {
                 console.error(e);
                 verbose(JSON.stringify(extractorConfig));
