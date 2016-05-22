@@ -20,7 +20,8 @@ var CONSTANTS = require("../constants.js"),
     fs = require("fs"),
     path = require("path"),
     csv = require("csv"),
-    CSV_STATE = "__csv_state__";
+    CSV_STATE = "__csv_state__",
+    timestamp = helpers.getTimestamp();
 
 module.exports = {
 
@@ -90,9 +91,12 @@ module.exports = {
         var ruid = record[CONSTANTS.RECORD_UID];
         if (updated) {
             record[CSV_STATE] = "updated";
+            record[CONSTANTS.CSV_UPDATED] = timestamp;
         } else {
             record[CSV_STATE] = "created";
+            record[CONSTANTS.CSV_CREATED] = timestamp;
         }
+        record[CONSTANTS.CSV_REMOVED] = ""; // Just in case
         this.records[ruid] = record;
         if (config.verbose) {
             console.log(ruid + "(" + updated + "): " + JSON.stringify(record));
@@ -111,7 +115,7 @@ module.exports = {
             stringifier;
         if (config["add-file-timestamp"]) {
             outputFileName = path.parse(config.path);
-            outputFileName.base = outputFileName.name += "." + helpers.getTimestamp() + outputFileName.ext;
+            outputFileName.base = outputFileName.name += "." + timestamp + outputFileName.ext;
             outputFileName = path.format(outputFileName);
         } else {
             outputFileName = config.path;
@@ -133,6 +137,7 @@ module.exports = {
             ++totalCount;
             var record = ctx.records[ruid];
             if (undefined === record[CSV_STATE]) {
+                record[CONSTANTS.CSV_REMOVED] = timestamp;
                 ++obsoleteCount;
             }
             helpers.serializeColumns(record, config.types || {});
