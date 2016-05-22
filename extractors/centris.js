@@ -1,8 +1,21 @@
 "use strict";
 
+/*
+{
+    "type": "centris",
+    "verbose": true,
+    "town": "Montréal",
+    "suburb": "Tous les arrondissements",
+    "max-price": 150000,
+    "house-types": ["Condo", "Loft / Studio"],
+    "room-type": "2+"
+}
+*/
+
 var CONSTANTS = require("../constants.js"),
     helpers = require("../helpers.js"),
     webDriver = require("selenium-webdriver"),
+    chromeDriver = require("selenium-webdriver/chrome"),
     By = require("selenium-webdriver").By;
 
 function extractProperty (chrome, callback) {
@@ -47,8 +60,10 @@ module.exports = {
      * http://www.centris.ca
      */
     start: function (config, callback, log) {
+        var options = options = new chromeDriver.Options();
+        options.addArguments("--user-data-dir=" + this._tmpDir);
         var chrome = new webDriver.Builder()
-            .forBrowser("chrome")
+            .withCapabilities(options.toCapabilities())
             .build();
         log("Opening http://www.centris.ca/");
         return chrome.get("http://www.centris.ca/")
