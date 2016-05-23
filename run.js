@@ -137,15 +137,23 @@ storage.open.call(storageContext, storageConfig)
         config.extractors.forEach(function (extractorConfig, index) {
             try {
                 var tmpDir = path.join(process.env.TEMP, //eslint-disable-line no-process-env
-                    "immo-automata", index.toString());
+                    "immo-automata", index.toString()),
+                    extractorContext,
+                    extractorModule,
+                    log,
+                    type;
                 fs.emptyDirSync(tmpDir);
-                var extractorContext = {
+                extractorContext = {
                     _uid: index,
                     _tmpDir: tmpDir
                 };
                 extractorConfig = checkForExtension(extractorConfig);
-                var extractorModule = require("./extractors/" + extractorConfig.type + ".js"),
-                    log;
+                if (true === extractorConfig[".process"]) {
+                    type = "process";
+                } else {
+                    type = extractorConfig.type;
+                }
+                extractorModule = require("./extractors/" + type + ".js");
                 if (extractorConfig.verbose) {
                     log = function (text) {
                         console.log("[extractor" + extractorContext._uid + "] " + text);
