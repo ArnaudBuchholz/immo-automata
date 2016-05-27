@@ -56,7 +56,7 @@ module.exports = {
      * http://www.duproprio.com
      */
     start: function (config, callback, log) {
-        var options = options = new chromeDriver.Options();
+        var options = new chromeDriver.Options();
         options.addArguments("--user-data-dir=" + this._tmpDir);
         var chrome = new webDriver.Builder()
             .withCapabilities(options.toCapabilities())
