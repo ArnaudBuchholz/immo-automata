@@ -118,7 +118,11 @@ module.exports = {
             if ("boolean" === type) {
                 value = "true" === value;
             } else if ("number" === type) {
-                value = parseFloat(value);
+                if (value) {
+                    value = parseFloat(value);
+                } else {
+                    value = "";
+                }
             }
             record[fieldName] = value;
         });
@@ -136,7 +140,11 @@ module.exports = {
     serializeColumns: function (record, types) {
         Object.keys(types).forEach(function (fieldName) {
             var value = record[fieldName];
-            record[fieldName] = value.toString();
+            if (value && "string" !== typeof value) {
+                record[fieldName] = value.toString();
+            } else {
+                record[fieldName] = "";
+            }
         });
     },
 
