@@ -1,7 +1,7 @@
 "use strict";
 
 module.exports = {
-    TYPE: "TYPE",
+    RECORD_TYPE: "TYPE",
     RECORD_UID: "RUID",
     URL: "URL",
     PRICE: "PRICE",
