@@ -6,11 +6,11 @@ var CONSTANTS = require("../constants.js"),
     chromeDriver = require("selenium-webdriver/chrome"),
     By = require("selenium-webdriver").By;
 
-function extractProperty (chrome, callback) {
+function extractProperty (config, chrome, callback) {
     var record = {};
     return chrome.getCurrentUrl()
         .then(function (url) {
-            record[CONSTANTS.TYPE] = "duproprio";
+            record[CONSTANTS.RECORD_TYPE] = "duproprio";
             record[CONSTANTS.URL] = url;
             return chrome.findElements(By.tagName("body"));
         })
@@ -44,6 +44,7 @@ function extractProperty (chrome, callback) {
             gps[0] = parseFloat(gps[0]).toString();
             gps[1] = parseFloat(gps[1]).toString();
             record[CONSTANTS.GPS] = gps.join(",");
+            helpers.mapColumns(record, config.mappings || {});
             return callback(record);
         });
 }
@@ -63,6 +64,9 @@ module.exports = {
             .build();
         log("Opening http://www.duproprio.com/");
         return chrome.get(config.url)
+            .then(function () {
+                return helpers.wait(10000);
+            })
             .then(function () {
                 // Click the first image
                 return chrome.findElements(By.className("showimage-house"));
@@ -90,9 +94,9 @@ module.exports = {
                             });
                     }
                     // Due to synchronization issue, we may have to repeat once the extraction
-                    return extractProperty(chrome, callback)
+                    return extractProperty(config, chrome, callback)
                         .then(onceExtracted, function () {
-                            return extractProperty(chrome, callback)
+                            return extractProperty(config, chrome, callback)
                                 .then(onceExtracted);
                         });
                 });
