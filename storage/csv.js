@@ -94,7 +94,9 @@ module.exports = {
             record[CONSTANTS.CSV_UPDATED] = timestamp;
         } else {
             record[CSV_STATE] = "created";
-            record[CONSTANTS.CSV_CREATED] = timestamp;
+            if (!record[CONSTANTS.CSV_CREATED]) {
+                record[CONSTANTS.CSV_CREATED] = timestamp;
+            }
         }
         record[CONSTANTS.CSV_REMOVED] = ""; // Just in case
         this.records[ruid] = record;
