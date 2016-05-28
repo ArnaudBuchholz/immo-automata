@@ -18,11 +18,11 @@ var CONSTANTS = require("../constants.js"),
     chromeDriver = require("selenium-webdriver/chrome"),
     By = require("selenium-webdriver").By;
 
-function extractProperty (chrome, callback) {
+function extractProperty (config, chrome, callback) {
     var record = {};
     return chrome.getCurrentUrl()
         .then(function (url) {
-            record[CONSTANTS.TYPE] = "centris";
+            record[CONSTANTS.RECORD_TYPE] = "centris";
             record[CONSTANTS.RECORD_UID] = "centris." + url.split("/").pop().split("?")[0];
             record[CONSTANTS.URL] = url;
             return chrome.findElements(By.id("BuyPrice"));
@@ -48,6 +48,7 @@ function extractProperty (chrome, callback) {
         .then(function (text) {
             var mapUrl = text.split("('")[1].split("')")[0];
             record[CONSTANTS.GPS] = mapUrl.split("&q=")[1];
+            helpers.mapColumns(record, config.mappings || {});
             return callback(record);
         });
 }
@@ -259,9 +260,9 @@ module.exports = {
                             });
                     }
                     // Due to synchronization issue, we may have to repeat once the extraction
-                    return extractProperty(chrome, callback)
+                    return extractProperty(config, chrome, callback)
                         .then(onceExtracted, function () {
-                            return extractProperty(chrome, callback)
+                            return extractProperty(config, chrome, callback)
                                 .then(onceExtracted);
                         });
                 });
