@@ -65,14 +65,26 @@ module.exports = {
         log("Opening http://www.duproprio.com/");
         return chrome.get(config.url)
             .then(function () {
-                return helpers.wait(10000);
-            })
-            .then(function () {
                 // Click the first image
                 return chrome.findElements(By.className("showimage-house"));
             })
             .then(function (firstHouseImages) {
-                return firstHouseImages[0].click();
+                return firstHouseImages[0].click()
+                    .then(function () {
+                        return Promise.resolve();
+                    }, function () {
+                        log("Email registration popup blocking the click, closing first");
+                        return chrome.findElements(By.className("overlayEmailAlert"))
+                            .then(function (elements) {
+                                return elements[0].findElements(By.className("close"));
+                            })
+                            .then(function (elements) {
+                                return elements[0].click();
+                            })
+                            .then(function () {
+                                return firstHouseImages[0].click();
+                            });
+                    });
             })
             // Loop on properties
             .then(function () {
