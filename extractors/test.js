@@ -14,8 +14,10 @@ module.exports = {
     start: function (config, callback) {
         var idx = 0,
             done,
-            promise = new Promise(function (resolve) {
+            failed,
+            promise = new Promise(function (resolve, reject) {
                 done = resolve;
+                failed = reject;
             });
 
         function loop () {
@@ -36,7 +38,11 @@ module.exports = {
             }, config.timeout || 0);
         }
 
-        loop();
+        if (config.fail) {
+            failed("config.fail is set");
+        } else {
+            loop();
+        }
         return promise;
     }
 
