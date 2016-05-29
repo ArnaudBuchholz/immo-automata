@@ -9,10 +9,12 @@ var CONSTANTS = require("./constants.js"),
     enableVerbose = "-verbose" === process.argv[3],
     verbose,
     filters = [],
-    extractorPromises = [],
     storageConfig,
     storageContext,
     storage,
+    runningExtractors = 0,
+    extractorsPromise,
+    extractorsDone,
     pendingExtractions = 0,
     extractionPromise,
     extractionDone,
@@ -134,6 +136,17 @@ storage.open.call(storageContext, storageConfig)
     .then(function () {
 
         verbose("Running extractors...");
+        runningExtractors = config.extractors.length;
+        extractorsPromise = new Promise(function (resolve) {
+            extractorsDone = resolve;
+        });
+
+        function extractorEnded () {
+            if (0 === --runningExtractors) {
+                extractorsDone();
+            }
+        }
+
         config.extractors.forEach(function (extractorConfig, index) {
             try {
                 var tmpDir = path.join(process.env.TEMP, //eslint-disable-line no-process-env
@@ -161,17 +174,23 @@ storage.open.call(storageContext, storageConfig)
                 } else {
                     log = nop;
                 }
-                extractorPromises.push(extractorModule.start.call(extractorContext, extractorConfig, recordExtracted,
-                    log));
+                extractorModule.start.call(extractorContext, extractorConfig, recordExtracted, log)
+                    .then(function () {
+                        verbose("[extractor" + extractorContext._uid + "] ended");
+                        extractorEnded();
+                    }, function (reason) {
+                        verbose("[extractor" + extractorContext._uid + "] failed: " + JSON.stringify(reason));
+                        extractorEnded();
+                    });
             } catch (e) {
                 console.error(e);
                 verbose(JSON.stringify(extractorConfig));
             }
         });
 
-        verbose(extractorPromises.length + " extractors running...");
+        verbose(runningExtractors + " extractors running...");
 
-        Promise.all(extractorPromises)
+        extractorsPromise
             .then(function (/*statuses*/) {
                 if (pendingExtractions) {
                     verbose("end of extractors, waiting for pending extractions...");
